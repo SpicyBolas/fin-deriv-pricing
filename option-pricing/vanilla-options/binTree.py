@@ -377,22 +377,23 @@ class BinomOptionVal:
         # Initial Error Calculation
         err = np.abs(value_iter-price)
         
-        while err > 1E-6:
+        while err > 1E-4:
             if value_iter > price:
                 if self.option_type=='call':
                     sigma_high = deepcopy(sigma_guess)
                 elif self.option_type=='put':
-                    sigma_low = deepcopy(sigma_guess)
+                    sigma_high = deepcopy(sigma_guess)
             elif value_iter < price:
                 if self.option_type=='call':
                     sigma_low = deepcopy(sigma_guess)
                 elif self.option_type=='put':
-                    sigma_high = deepcopy(sigma_guess)
+                    sigma_low = deepcopy(sigma_guess)
 
             sigma_guess = (sigma_low+sigma_high)/2
             self.sigma = deepcopy(sigma_guess)
             value_iter = self.value(N,div,T_div,div_yield)
             err = np.abs(value_iter-price)
+            print(value_iter)
         
         print(f'Implied volatility is {self.sigma}')
         return self.sigma
@@ -468,6 +469,7 @@ class BinomOptionVal:
         while err > 1E-6:
             imp_vol = NR_iter(imp_vol)
             err = np.abs(v(imp_vol))
+            
 
         print(f'Option value of type European {self.option_type} and maturity of T={self.T} years\n and price ${price} has implied volatility of {imp_vol}')
     
@@ -475,15 +477,15 @@ class BinomOptionVal:
     
 if __name__=='__main__':
     
-    S0 = 380
-    r = 0.1
-    sigma =0.15492
-    K = 400
+    S0 = 334.07
+    r = 0.0452
+    sigma =0.25
+    K = 315
     T = 1
 
-    optionPricer = BinomOptionVal(S0,K,T,r,sigma,option_type='call',American=False,underlying='S',q=0.1)
+    optionPricer = BinomOptionVal(S0,K,T,r,sigma,option_type='put',American=False,underlying='S')
     
-    c = optionPricer.value_bsm()
+    imp_vol = optionPricer.impl_vol(20,N=1000)
 
-    print(c)
+    print(imp_vol)
 
