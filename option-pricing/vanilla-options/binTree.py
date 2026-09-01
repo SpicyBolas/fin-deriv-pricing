@@ -82,14 +82,14 @@ class BinomOptionVal:
                 d1 = (np.log((self.S0-sum_divs+div[-1]*np.exp(-self.r*T_div[-1]))/self.K)+(self.r-self.q+self.sigma**2/2)*T_div[-1])/(self.sigma*np.sqrt(T_div[-1]))
                 d2 = d1 - self.sigma*np.sqrt(T_div[-1])
                 # Compute valuation of early exercise
-                value_early = (self.S0*np.exp(-self.q*self.T)-sum_divs+div[-1]*np.exp(-self.r*T_div[-1]))*norm.cdf(d1)-self.K*np.exp(-self.r*T_div[-1])*norm.cdf(d2)
+                value_early = ((self.S0-sum_divs)*np.exp(-self.q*self.T)+div[-1]*np.exp(-self.r*T_div[-1]))*norm.cdf(d1)-self.K*np.exp(-self.r*T_div[-1])*norm.cdf(d2)
                 # Redefine value as maximum of the Euro value and American value
                 value = max(value,value_early)
             # Round the value to 4 d.p.
             value = round(10000*value)/10000
 
         elif self.option_type == 'put':
-            value = self.K*np.exp(-self.r*self.T)*norm.cdf(-d2)-(self.S0*np.exp(-self.q*self.T)-sum_divs)*norm.cdf(-d1)
+            value = self.K*np.exp(-self.r*self.T)*norm.cdf(-d2)-((self.S0-sum_divs)*np.exp(-self.q*self.T))*norm.cdf(-d1)
             value = round(1000000*value)/1000000
         # Print the key information
         print(f'Option value of type {type} {self.option_type} and maturity of T={self.T} years\n is ${value}')
@@ -113,9 +113,9 @@ class BinomOptionVal:
             # Delta
             self.delta = np.exp(-self.q*self.T)*norm.cdf(d1)    
             # Gamma
-            self.gamma = np.exp(-self.q*self.T)/(self.sigma*self.S0*np.sqrt(self.T*2*np.pi))*np.exp(-d1**2/2)
+            self.gamma = np.exp(-self.q*self.T)/(self.sigma*(self.S0-sum_divs)*np.sqrt(self.T*2*np.pi))*np.exp(-d1**2/2)
             # Theta
-            self.theta = -(self.S0*np.exp(-self.q*self.T)*(d1dT/np.sqrt(2*np.pi)*np.exp(-d1**2/2)-self.q*norm.cdf(d1))+\
+            self.theta = -((self.S0-sum_divs)*np.exp(-self.q*self.T)*(d1dT/np.sqrt(2*np.pi)*np.exp(-d1**2/2)-self.q*norm.cdf(d1))+\
                 -self.K*np.exp(-self.r*self.T)*(d2dT/np.sqrt(2*np.pi)*np.exp(-d2**2/2)-self.r*norm.cdf(d2)))
             # Vega
             self.vega = d1dsig*((self.S0-sum_divs)*np.exp(-self.q*self.T)/np.sqrt(2*np.pi))*np.exp(-0.5*d1**2)\
@@ -134,8 +134,8 @@ class BinomOptionVal:
             self.theta = -(self.S0*np.exp(-self.q*self.T)*(d1dT/np.sqrt(2*np.pi)*np.exp(-d1**2/2)+self.q*norm.cdf(-d1))+\
                 -self.K*np.exp(-self.r*self.T)*(d2dT/np.sqrt(2*np.pi)*np.exp(-d2**2/2)+self.r*norm.cdf(-d2)))
             # Vega
-            self.vega = -d1dsig*((self.S0-sum_divs)*np.exp(-self.q*self.T)/np.sqrt(2*np.pi))*np.exp(-0.5*d1**2)\
-                +d2dsig*(self.K*np.exp(-self.r*self.T)/np.sqrt(2*np.pi))*np.exp(-0.5*d2**2)
+            self.vega = d1dsig*((self.S0-sum_divs)*np.exp(-self.q*self.T)/np.sqrt(2*np.pi))*np.exp(-0.5*d1**2)\
+                -d2dsig*(self.K*np.exp(-self.r*self.T)/np.sqrt(2*np.pi))*np.exp(-0.5*d2**2)
             # Rho
             self.rho = (self.S0-sum_divs)*np.exp(-self.q*self.T)*np.sqrt(self.T)/self.sigma/np.sqrt(2*np.pi)*np.exp(-d1**2/2)\
                 -self.T*self.K*np.exp(-self.r*self.T)*norm.cdf(-d2)+\
@@ -329,12 +329,12 @@ class BinomOptionVal:
         # perturb r
         self.r += d_r_sig
         # Compute option value perturbing sigma 
-        f1_rho = self.value(N,div,T_div)
+        f1_rho = self.value(N,div,T_div,div_yield)
         # Return to original value
         self.r -= d_r_sig
 
         # Compute nominal value of the option
-        f0 = self.value(N,div,T_div)
+        f0 = self.value(N,div,T_div,div_yield)
 
         #Vega#
         ######
@@ -448,14 +448,14 @@ class BinomOptionVal:
 
             # Option Vega
             dv = lambda sigma_var: dd1(sigma_var)*((self.S0*np.exp(-self.q*self.T)-sum_divs)/np.sqrt(2*np.pi))*np.exp(-0.5*d1(sigma_var)**2)\
-                -dd2(sigma_var)*(self.K*np.exp(-self.r*self.T)/np.sqrt(2*np.pi))**np.exp(-0.5*d2(sigma_var)**2)
+                -dd2(sigma_var)*(self.K*np.exp(-self.r*self.T)/np.sqrt(2*np.pi))*np.exp(-0.5*d2(sigma_var)**2)
             
         elif self.option_type=='put':
             # Option value function
             v = lambda sigma_var: self.K*np.exp(-self.r*self.T)*norm.cdf(-d2(sigma_var))-(self.S0*np.exp(-self.q*self.T)-sum_divs)*norm.cdf(-d1(sigma_var))-price
 
             # Option Vega
-            dv = lambda sigma_var: -dd2(sigma_var)*(self.K*np.exp(-self.r*self.T)/np.sqrt(2*np.pi))**np.exp(-0.5*d2(sigma_var)**2)\
+            dv = lambda sigma_var: -dd2(sigma_var)*(self.K*np.exp(-self.r*self.T)/np.sqrt(2*np.pi))*np.exp(-0.5*d2(sigma_var)**2)\
                 +dd1(sigma_var)*((self.S0*np.exp(-self.q*self.T)-sum_divs)/np.sqrt(2*np.pi))*np.exp(-0.5*d1(sigma_var)**2)
 
         # Newton-Rhapson iterator:
@@ -486,6 +486,8 @@ if __name__=='__main__':
     optionPricer = BinomOptionVal(S0,K,T,r,sigma,option_type='put',American=True,underlying='S')
     
     imp_vol = optionPricer.impl_vol(2,N=1000)
+
+    #imp_vol = optionPricer.impl_vol_bsm(2)
 
     print(imp_vol)
 
