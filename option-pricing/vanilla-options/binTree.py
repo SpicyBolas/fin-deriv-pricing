@@ -481,11 +481,11 @@ if __name__=='__main__':
     r = 0.0452
     sigma =0.25
     K = 315
-    T = 1
+    T = 3/252
 
-    optionPricer = BinomOptionVal(S0,K,T,r,sigma,option_type='put',American=False,underlying='S')
+    optionPricer = BinomOptionVal(S0,K,T,r,sigma,option_type='put',American=True,underlying='S')
     
-    imp_vol = optionPricer.impl_vol(20,N=1000)
+    imp_vol = optionPricer.impl_vol(2,N=1000)
 
     print(imp_vol)
 

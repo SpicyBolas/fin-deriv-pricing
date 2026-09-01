@@ -34,19 +34,19 @@ def gamma(S0,K,sigma,r,T,q,type):
     
 def theta(S0,K,sigma,r,T,q,type):
     if type=='call':
-        return S0*np.exp(-q*T)*(d1dT(S0,K,sigma,r,T,q)/np.sqrt(2*np.pi)*np.exp(-d1(S0,K,sigma,r,T,q)**2/2)-q*norm.cdf(d1(S0,K,sigma,r,T,q)))+\
-            -K*np.exp(-r*T)*(d2dT(S0,K,sigma,r,T,q)/np.sqrt(2*np.pi)*np.exp(-d2(S0,K,sigma,r,T,q)**2/2)-r*norm.cdf(d2(S0,K,sigma,r,T,q)))
+        return -(S0*np.exp(-q*T)*(d1dT(S0,K,sigma,r,T,q)/np.sqrt(2*np.pi)*np.exp(-d1(S0,K,sigma,r,T,q)**2/2)-q*norm.cdf(d1(S0,K,sigma,r,T,q)))+\
+            -K*np.exp(-r*T)*(d2dT(S0,K,sigma,r,T,q)/np.sqrt(2*np.pi)*np.exp(-d2(S0,K,sigma,r,T,q)**2/2)-r*norm.cdf(d2(S0,K,sigma,r,T,q))))
     elif type=='put':
-        return S0*np.exp(-q*T)*(d1dT(S0,K,sigma,r,T,q)/np.sqrt(2*np.pi)*np.exp(-d1(S0,K,sigma,r,T,q)**2/2)+q*norm.cdf(-d1(S0,K,sigma,r,T,q)))+\
-            -K*np.exp(-r*T)*(d2dT(S0,K,sigma,r,T,q)/np.sqrt(2*np.pi)*np.exp(-d2(S0,K,sigma,r,T,q)**2/2)+r*norm.cdf(-d2(S0,K,sigma,r,T,q)))
+        return -(S0*np.exp(-q*T)*(d1dT(S0,K,sigma,r,T,q)/np.sqrt(2*np.pi)*np.exp(-d1(S0,K,sigma,r,T,q)**2/2)+q*norm.cdf(-d1(S0,K,sigma,r,T,q)))+\
+            -K*np.exp(-r*T)*(d2dT(S0,K,sigma,r,T,q)/np.sqrt(2*np.pi)*np.exp(-d2(S0,K,sigma,r,T,q)**2/2)+r*norm.cdf(-d2(S0,K,sigma,r,T,q))))
     
 def vega(S0,K,sigma,r,T,q,type):
     if type=='call':
         return d1dsig(S0,K,sigma,r,T,q)*((S0)*np.exp(-q*T)/np.sqrt(2*np.pi))*np.exp(-0.5*d1(S0,K,sigma,r,T,q)**2)\
             -d2dsig(S0,K,sigma,r,T,q)*(K*np.exp(-r*T)/np.sqrt(2*np.pi))*np.exp(-0.5*d2(S0,K,sigma,r,T,q)**2) 
     elif type=='put':
-        return -d1dsig(S0,K,sigma,r,T,q)*((S0)*np.exp(-q*T)/np.sqrt(2*np.pi))*np.exp(-0.5*d1(S0,K,sigma,r,T,q)**2)\
-            +d2dsig(S0,K,sigma,r,T,q)*(K*np.exp(-r*T)/np.sqrt(2*np.pi))*np.exp(-0.5*d2(S0,K,sigma,r,T,q)**2)
+        return d1dsig(S0,K,sigma,r,T,q)*((S0)*np.exp(-q*T)/np.sqrt(2*np.pi))*np.exp(-0.5*d1(S0,K,sigma,r,T,q)**2)\
+            -d2dsig(S0,K,sigma,r,T,q)*(K*np.exp(-r*T)/np.sqrt(2*np.pi))*np.exp(-0.5*d2(S0,K,sigma,r,T,q)**2)
     
 def rho(S0,K,sigma,r,T,q,type):
     if type=='call':
@@ -153,7 +153,7 @@ surf = ax.plot_surface(X, Y, Z, cmap=cm.coolwarm,
                        linewidth=0, antialiased=False)
 
 # Customize the z axis.
-ax.set_zlim(0, 5)
+ax.set_zlim(0, -5)
 
 # %%
 vega_vec = vega(S0,K,sigma_vec,r,T,q,'call')
@@ -214,7 +214,7 @@ ax.set_title('Rho (Call)')
 ax.set_xlabel('S0')
 ax.set_ylabel('Rho')
 
-vega_vec = vega(S0_vec,K,sigma,r,T,q,'put')
+rho_vec = rho(S0_vec,K,sigma,r,T,q,'put')
 
 fig,ax = plt.subplots()
 ax.plot(S0_vec,rho_vec)
